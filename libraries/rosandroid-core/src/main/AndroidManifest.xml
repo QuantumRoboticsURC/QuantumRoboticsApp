@@ -13,11 +13,11 @@
 
     <application>
         <activity
-            android:name="org.ros.android.MasterChooser"
+            android:name="org.ros.android.com.ros.android.MasterChooser"
             android:theme="@style/Theme.AppCompat"
             android:launchMode="standard"/>
 
-        <service android:name="org.ros.android.NodeMainExecutorService"
+        <service android:name="org.ros.android.com.ros.android.NodeMainExecutorService"
             tools:ignore="ExportedService">
             <intent-filter>
                 <action android:name="org.ros.android.NodeMainExecutorService"/>
