@@ -16,6 +16,9 @@
 
 package com.app.quantumrobotics;
 
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
+
 import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -42,11 +45,16 @@ import io.github.controlwear.virtual.joystick.android.JoystickView;
 public class MainActivity extends RosActivity implements View.OnClickListener {
     private static final String TAG = MainActivity.class.getSimpleName();
     public LocationPublisherNode locationPublisherNode = new LocationPublisherNode();
+    //public LocationPublisherNode joint1Node = new LocationPublisherNode();
+    //public Q4PublisherNode joint4Node = new Q4PublisherNode();
+    public float leftval;
+    public float rightval;
+    public Boolean armMode= FALSE;
 
 
     private EditText locationFrameIdView, imuFrameIdView;
     Button applyB;
-    private OnFrameIdChangeListener locationFrameIdListener, imuFrameIdListener;
+    private OnFrameIdChangeListener locationFrameIdListener, imuFrameIdListener,joint4FrameIdListener;
 
     public MainActivity() {
         super("RosAndroidExample", "RosAndroidExample");
@@ -56,14 +64,25 @@ public class MainActivity extends RosActivity implements View.OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        locationPublisherNode.setTopic("arm_teleop/joint1","float64");
-        //locationPublisherNode.setTopic("turtle1/cmd_vel","twist");
+        if(!armMode){
+            locationPublisherNode.setTopic("/cmd_vel","twist");
+        }else{
+        locationPublisherNode.setTopic("arm_teleop/joint1","float64");}
+        //locationPublisherNode.setTopic("/turtle1/cmd_vel","twist");
+        //joint1Node.setTopic("arm_teleop/joint1","float64");
+        //joint4Node.setTopic("arm_teleop/joint4","float64");
         //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         locationFrameIdListener = new OnFrameIdChangeListener() {
             @Override
             public void onFrameIdChanged(String newFrameId) {
                 Log.w(TAG, "Default location OnFrameIdChangedListener called");
+            }
+        };
+        joint4FrameIdListener= new OnFrameIdChangeListener() {
+            @Override
+            public void onFrameIdChanged(String newFrameId) {
+                Log.w(TAG, "Default joint4 OnFrameIdChangedListener called");
             }
         };
         imuFrameIdListener = new OnFrameIdChangeListener() {
@@ -83,7 +102,7 @@ public class MainActivity extends RosActivity implements View.OnClickListener {
         applyB = findViewById(R.id.b_apply);
         applyB.setOnClickListener(this);
 
-        //Joystick
+        //Joysticks
         JoystickView joystick = (JoystickView) findViewById(R.id.jV);
         joystick.setOnMoveListener(new JoystickView.OnMoveListener() {
             @Override
@@ -92,13 +111,32 @@ public class MainActivity extends RosActivity implements View.OnClickListener {
                 //Strength: de 0 a 100
                 //Angle: 0 a 360 en donde una L es un angulo de 90
                 // (El pulgar apuntando arriba)
-                int direc;
-                if(angle % 90 < 6 || (angle <= 90 && angle >=85)){
-                    angle=0;
+                leftval= (float) (Math.sin(angle*Math.PI/180));
+                //Set node values
+                if(!armMode){
+                    locationPublisherNode.setSpeedVars(leftval,rightval);
+                }else{
+                    locationPublisherNode.setJointVars(leftval,rightval);
                 }
-                if(angle >= 96 && angle <= 270){direc=1;}
-                else{direc=-1;}
-                locationPublisherNode.setVars(angle,strength,direc);
+            }
+        });
+
+        JoystickView joystick2 = (JoystickView) findViewById(R.id.jV2);
+        joystick2.setOnMoveListener(new JoystickView.OnMoveListener() {
+            @Override
+            public void onMove(int angle, int strength) {
+                // Direccion del rover
+                //Strength: de 0 a 100
+                //Angle: 0 a 360 en donde una L es un angulo de 90
+                // (El pulgar apuntando arriba)
+                rightval= (float) (Math.sin(angle*Math.PI/180));
+                //Send node values
+                if(!armMode){
+                    locationPublisherNode.setSpeedVars(leftval,rightval);
+                }else{
+                    locationPublisherNode.setJointVars(leftval,rightval);
+                }
+
             }
         });
     }
@@ -112,6 +150,7 @@ public class MainActivity extends RosActivity implements View.OnClickListener {
         ImuPublisherNode imuPublisherNode = new ImuPublisherNode();
 
         MainActivity.this.locationFrameIdListener = locationPublisherNode.getFrameIdListener();
+        //MainActivity.this.joint4FrameIdListener= joint4Node.getFrameIdListener();
         MainActivity.this.imuFrameIdListener = imuPublisherNode.getFrameIdListener();
 
         Criteria criteria = new Criteria();
@@ -178,6 +217,8 @@ public class MainActivity extends RosActivity implements View.OnClickListener {
             return;
         }
 
+
+
         // At this point, the user has already been prompted to either enter the URI
         // of a master to use or to start a master locally.
 
@@ -187,7 +228,12 @@ public class MainActivity extends RosActivity implements View.OnClickListener {
         NodeConfiguration nodeConfiguration = NodeConfiguration.newPublic(InetAddressFactory.newNonLoopback().getHostAddress());
         nodeConfiguration.setMasterUri(getMasterUri());
 
-        nodeMainExecutor.execute(locationPublisherNode, nodeConfiguration);
+        if(!armMode){
+            nodeMainExecutor.execute(locationPublisherNode, nodeConfiguration);
+        }else{
+            nodeMainExecutor.execute(locationPublisherNode,nodeConfiguration);
+          //  nodeMainExecutor.execute(joint4Node,nodeConfiguration);
+        }
         nodeMainExecutor.execute(imuPublisherNode, nodeConfiguration);
 
         onClick(null);
@@ -223,5 +269,17 @@ public class MainActivity extends RosActivity implements View.OnClickListener {
                 Log.e(TAG, "Permissions not granted.");
             }
         }
+    }
+
+    public void changeMode(View view) {
+        armMode= !armMode;
+
+        if(!armMode){
+            locationPublisherNode.setTopic("/cmd_vel","twist");
+            Log.w(TAG,"Nav");
+        }else{
+            Log.w(TAG,"arm");
+            locationPublisherNode.setTopic("arm_teleop/joint1","float64");}
+
     }
 }
