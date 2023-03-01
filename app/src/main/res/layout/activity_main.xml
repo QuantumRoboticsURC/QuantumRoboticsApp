@@ -34,7 +34,7 @@
         android:hint="@string/default_imu_hint"
         android:inputType="text"
         tools:ignore="MissingConstraints" />
-
+    <!--
     <VideoView
         android:id="@+id/video"
         android:layout_alignParentTop="true"
@@ -46,7 +46,18 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-    </VideoView>
+    </VideoView>-->
+    <com.ros.android.view.RosImageView
+        android:id="@+id/cam"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:background="#000000"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayout"
@@ -65,7 +76,7 @@
             app:layout_constraintTop_toTopOf="parent"
             android:layout_marginLeft="25dp" />
 
-        <Button
+        <!--<Button
             android:id="@+id/Configs"
             android:layout_width="25dp"
             android:layout_height="25dp"
@@ -75,8 +86,7 @@
             app:layout_constraintTop_toBottomOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
+            app:layout_constraintTop_toTopOf="parent" />-->
         <Button
             android:id="@+id/R1"
             android:layout_width="50dp"
@@ -106,8 +116,51 @@
             app:JV_fixedCenter="false"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"/>
+        <LinearLayout
+            android:id="@+id/armButtons"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintRight_toLeftOf="@+id/rightLay"
+            app:layout_constraintLeft_toRightOf="@+id/jV"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+
+
+        <Button
+            android:id="@+id/intermediate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Intermediate"
+            android:textColor="#BBFFFFFF"
+            android:onClick="intermediate"/>
+        <Button
+            android:id="@+id/storage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Storage"
+            android:textColor="#BBFFFFFF"
+            android:onClick="storage"/>
+        <Button
+            android:id="@+id/floor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Floor"
+            android:textColor="#BBFFFFFF"
+            android:onClick="floor"/>
+        <Button
+            android:id="@+id/box"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Box"
+            android:textColor="#BBFFFFFF"
+            android:onClick="box"/>
+        </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/rightLay"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"

@@ -34,22 +34,31 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 
 import org.ros.address.InetAddressFactory;
+
+import com.ros.android.BitmapFromCompressedImage;
 import com.ros.android.RosActivity;
+import com.ros.android.view.RosImageView;
+
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
 
 import io.github.controlwear.virtual.joystick.android.JoystickView;
+import sensor_msgs.CompressedImage;
+import sensor_msgs.Image;
 
 public class MainActivity extends RosActivity implements View.OnClickListener {
     private static final String TAG = MainActivity.class.getSimpleName();
+    private RosImageView<Image> rosImageView;
     public LocationPublisherNode locationPublisherNode = new LocationPublisherNode();
     //public LocationPublisherNode joint1Node = new LocationPublisherNode();
     //public Q4PublisherNode joint4Node = new Q4PublisherNode();
     public float leftval;
     public float rightval;
     public Boolean armMode= FALSE;
+    public LinearLayout armbuttons;
 
 
     private EditText locationFrameIdView, imuFrameIdView;
@@ -102,6 +111,7 @@ public class MainActivity extends RosActivity implements View.OnClickListener {
         applyB = findViewById(R.id.b_apply);
         applyB.setOnClickListener(this);
 
+        armbuttons= (LinearLayout) findViewById(R.id.armButtons);
         //Joysticks
         JoystickView joystick = (JoystickView) findViewById(R.id.jV);
         joystick.setOnMoveListener(new JoystickView.OnMoveListener() {
@@ -114,9 +124,10 @@ public class MainActivity extends RosActivity implements View.OnClickListener {
                 leftval= (float) (Math.sin(angle*Math.PI/180));
                 //Set node values
                 if(!armMode){
-                    locationPublisherNode.setSpeedVars(leftval,rightval);
+                    locationPublisherNode.setSpeedVars(leftval,rightval,true);
+                    locationPublisherNode.setArmMode(1);
                 }else{
-                    locationPublisherNode.setJointVars(leftval,rightval);
+                    locationPublisherNode.setJointVars(leftval,rightval,true);
                 }
             }
         });
@@ -132,13 +143,17 @@ public class MainActivity extends RosActivity implements View.OnClickListener {
                 rightval= (float) (Math.sin(angle*Math.PI/180));
                 //Send node values
                 if(!armMode){
-                    locationPublisherNode.setSpeedVars(leftval,rightval);
+                    locationPublisherNode.setSpeedVars(leftval,rightval,true);
                 }else{
-                    locationPublisherNode.setJointVars(leftval,rightval);
+                    locationPublisherNode.setJointVars(leftval,rightval,true);
                 }
 
             }
         });
+        rosImageView = findViewById(R.id.cam);
+        rosImageView.setTopicName("/usb_cam/image_raw/compressed");
+        rosImageView.setMessageType(CompressedImage._TYPE);
+        rosImageView.setMessageToBitmapCallable(new BitmapFromCompressedImage());
     }
 
     @Override
@@ -152,6 +167,8 @@ public class MainActivity extends RosActivity implements View.OnClickListener {
         MainActivity.this.locationFrameIdListener = locationPublisherNode.getFrameIdListener();
         //MainActivity.this.joint4FrameIdListener= joint4Node.getFrameIdListener();
         MainActivity.this.imuFrameIdListener = imuPublisherNode.getFrameIdListener();
+
+
 
         Criteria criteria = new Criteria();
         criteria.setAccuracy(Criteria.ACCURACY_FINE);
@@ -228,14 +245,16 @@ public class MainActivity extends RosActivity implements View.OnClickListener {
         NodeConfiguration nodeConfiguration = NodeConfiguration.newPublic(InetAddressFactory.newNonLoopback().getHostAddress());
         nodeConfiguration.setMasterUri(getMasterUri());
 
+
         if(!armMode){
+
             nodeMainExecutor.execute(locationPublisherNode, nodeConfiguration);
         }else{
             nodeMainExecutor.execute(locationPublisherNode,nodeConfiguration);
           //  nodeMainExecutor.execute(joint4Node,nodeConfiguration);
         }
-        nodeMainExecutor.execute(imuPublisherNode, nodeConfiguration);
-
+        //nodeMainExecutor.execute(imuPublisherNode, nodeConfiguration);
+        nodeMainExecutor.execute(rosImageView, nodeConfiguration.setNodeName("Cam_listener"));
         onClick(null);
     }
 
@@ -277,9 +296,32 @@ public class MainActivity extends RosActivity implements View.OnClickListener {
         if(!armMode){
             locationPublisherNode.setTopic("/cmd_vel","twist");
             Log.w(TAG,"Nav");
+            armbuttons.setVisibility(View.INVISIBLE);
         }else{
             Log.w(TAG,"arm");
-            locationPublisherNode.setTopic("arm_teleop/joint1","float64");}
+            locationPublisherNode.setTopic("arm_teleop/joint1","float64");
+            armbuttons.setVisibility(View.VISIBLE);
+        }
 
+    }
+
+    public void intermediate(View view) {
+        locationPublisherNode.setArmMode(1);
+        locationPublisherNode.setJointVars(0,0,true);
+    }
+
+    public void storage(View view) {
+        locationPublisherNode.setArmMode(2);
+        locationPublisherNode.setJointVars(0,0,true);
+    }
+
+    public void floor(View view) {
+        locationPublisherNode.setArmMode(3);
+        locationPublisherNode.setJointVars(0,0,true);
+    }
+
+    public void box(View view) {
+        locationPublisherNode.setArmMode(4);
+        locationPublisherNode.setJointVars(0,0,true);
     }
 }

@@ -32,11 +32,14 @@ public class LocationPublisherNode extends AbstractNodeMain {
     private String topic_name;
     private String topic_type;
 
+    private Boolean moving= false;
 
     private double linearVelocity;
     private double angularVelocity;
-    private double q1;
-    private double q4;
+    private double q1= -5;
+    private double q2= 135;
+    private double q3= -90;
+    private double q4= -45;
 
     private String nombre_topico;
     private String tipo_topico;
@@ -48,6 +51,8 @@ public class LocationPublisherNode extends AbstractNodeMain {
 
     private Publisher<Message> finalLocationPublisher;
     private Publisher<Message> finalLocationPublisher1;
+    private Publisher<Message> finalLocationPublisher2;
+    private Publisher<Message> finalLocationPublisher3;
     private Publisher<Message> finalLocationPublisher4;
     public LocationPublisherNode() {
         isMessagePending = false;
@@ -83,17 +88,61 @@ public class LocationPublisherNode extends AbstractNodeMain {
             }
         };
     }
-    public void setSpeedVars(float left_val, float right_val){
+    public void setSpeedVars(float left_val, float right_val,boolean onMove){
         linearVelocity= ((left_val+right_val)/2) * 0.2;
         angularVelocity= ((left_val-right_val)/2) * 0.2;
+
+        moving= onMove;
     }
-    public void setJointVars(float joint1,float joint4){
-        q1= joint1*90;
-        q4= joint4*90;
+    public void setJointVars(float joint1,float joint4, boolean onMove){
+        q1+= joint1*5;
+        q4+= joint4*5;
+        if(q1 > 90 || q1 < -90){q1-=joint1*5;}
+        if (q4 > 90 || q4 < -90){q4-=joint4*5;}
+        moving= onMove;
+
     }
     public void setTopic(String name,String type){
         nombre_topico=name;
         tipo_topico=type;
+    }
+    public void setArmMode(Integer mode) {
+        switch (mode){
+            case 1:
+                //Intermediate
+                q1= -5;
+                q2= 135;
+                q3= -90;
+                q4= -45;
+                break;
+            case 2:
+                //Storage
+                q1= -5;
+                q2= 161;
+                q3= -163.15;
+                q4= 90;
+                break;
+            case 3:
+                //Floor
+                q1= -5;
+                q2= 49.13;
+                q3= -101.74;
+                q4= 52.62;
+                break;
+            case 4:
+                //Box
+                q1= -94;
+                q2= 134.95;
+                q3= -89.91;
+                q4= -45.05;
+                break;
+            default:
+                //HOME
+                q1= -5;
+                q2= 135;
+                q3= -90;
+                q4= -45;
+        }
     }
     @Override
     public void onStart(final ConnectedNode connectedNode) {
@@ -102,10 +151,14 @@ public class LocationPublisherNode extends AbstractNodeMain {
         //this.topic_type= "geometry_msgs/Twist";
         Publisher<Message> locationPublisher;
         Publisher<Message> locationPublisher1;
+        Publisher<Message> locationPublisher2;
+        Publisher<Message> locationPublisher3;
         Publisher<Message> locationPublisher4;
 
         locationPublisher = connectedNode.newPublisher("cmd_vel", Twist._TYPE);
         locationPublisher1 = connectedNode.newPublisher("arm_teleop/joint1", "std_msgs/Float64");
+        locationPublisher2 = connectedNode.newPublisher("arm_teleop/joint2", "std_msgs/Float64");
+        locationPublisher3 = connectedNode.newPublisher("arm_teleop/joint3", "std_msgs/Float64");
         locationPublisher4 = connectedNode.newPublisher("arm_teleop/joint4", "std_msgs/Float64");
         /*
         if(this.topic_type=="twist"){
@@ -123,6 +176,8 @@ public class LocationPublisherNode extends AbstractNodeMain {
 
         finalLocationPublisher = locationPublisher;
         finalLocationPublisher1= locationPublisher1;
+        finalLocationPublisher2= locationPublisher2;
+        finalLocationPublisher3= locationPublisher3;
         finalLocationPublisher4= locationPublisher4;
         connectedNode.executeCancellableLoop(new CancellableLoop() {
             private int sequenceNumber;
@@ -137,13 +192,14 @@ public class LocationPublisherNode extends AbstractNodeMain {
             protected void loop() throws InterruptedException {
                 //double linearVelocity = 0.5;
                 //double angularVelocity = -0.5;
-                if ((cachedLocation != null) &&
-                        (isMessagePending
+
+                if ((isMessagePending
                                 || (System.currentTimeMillis() - previousPublishTime) >= maxElapse // Or, is max elapse reached?
                         )) {
                     header.setStamp(connectedNode.getCurrentTime());
                     header.setFrameId(navSatFixFrameId);
                     header.setSeq(sequenceNumber);
+                    Log.w(TAG,"Prueba");
                     //navSatFix.setHeader(header);
 
                     //navSatFix.setLatitude(cachedLocation.getLatitude());
@@ -153,15 +209,27 @@ public class LocationPublisherNode extends AbstractNodeMain {
                         message.getLinear().setX(linearVelocity);
                         message.getAngular().setZ(angularVelocity);
                         Log.d(TAG, nombre_topico);
-                        finalLocationPublisher.publish(message);
+                        if(moving){
+                            finalLocationPublisher.publish(message);
+                            moving=false;
+                        }
                     }else if(tipo_topico=="float64"){
                         final std_msgs.Float64 message1= (Float64) finalLocationPublisher1.newMessage();
+                        final std_msgs.Float64 message2= (Float64) finalLocationPublisher2.newMessage();
+                        final std_msgs.Float64 message3= (Float64) finalLocationPublisher3.newMessage();
                         final std_msgs.Float64 message4= (Float64) finalLocationPublisher4.newMessage();
                         message1.setData(q1);
+                        message2.setData(q2);
+                        message3.setData(q3);
                         message4.setData(q4);
                         Log.d(TAG, nombre_topico);
-                        finalLocationPublisher1.publish(message1);
-                        finalLocationPublisher4.publish(message4);
+                        if(moving){
+                            finalLocationPublisher1.publish(message1);
+                            finalLocationPublisher2.publish(message2);
+                            finalLocationPublisher3.publish(message3);
+                            finalLocationPublisher4.publish(message4);
+                            moving=false;
+                        }
                     }
 
 
@@ -197,4 +265,6 @@ public class LocationPublisherNode extends AbstractNodeMain {
     public OnFrameIdChangeListener getFrameIdListener() {
         return locationFrameIdChangeListener;
     }
+
+
 }

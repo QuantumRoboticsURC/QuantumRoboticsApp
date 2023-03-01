@@ -21,6 +21,7 @@ import android.graphics.Bitmap;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 
+import com.ros.android.BitmapFromCompressedImage;
 import com.ros.android.MessageCallable;
 
 import org.ros.message.MessageListener;
@@ -36,7 +37,7 @@ import org.ros.node.topic.Subscriber;
  * @author ethan.rublee@gmail.com (Ethan Rublee)
  * @author damonkohler@google.com (Damon Kohler)
  */
-public class RosImageView<T> extends ImageView implements NodeMain {
+public class RosImageView<T> extends android.support.v7.widget.AppCompatImageView implements NodeMain {
 
   private String topicName;
   private String messageType;
@@ -62,8 +63,8 @@ public class RosImageView<T> extends ImageView implements NodeMain {
     this.messageType = messageType;
   }
 
-  public void setMessageToBitmapCallable(MessageCallable<Bitmap, T> callable) {
-    this.callable = callable;
+  public void setMessageToBitmapCallable(BitmapFromCompressedImage callable) {
+    this.callable = (MessageCallable<Bitmap, T>) callable;
   }
 
   @Override
