@@ -87,6 +87,17 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />-->
+
+        <Spinner
+            android:id="@+id/cam_selec"
+            android:backgroundTint="#FFFFFF"
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            app:layout_constraintStart_toEndOf="@id/b_apply"
+            app:layout_constraintTop_toBottomOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/R1"
+            app:layout_constraintTop_toTopOf="parent"/>
         <Button
             android:id="@+id/R1"
             android:layout_width="50dp"

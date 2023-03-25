@@ -19,6 +19,7 @@ package com.ros.android.view;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.widget.ImageView;
 
 import com.ros.android.BitmapFromCompressedImage;
@@ -40,7 +41,14 @@ import org.ros.node.topic.Subscriber;
 public class RosImageView<T> extends android.support.v7.widget.AppCompatImageView implements NodeMain {
 
   private String topicName;
+  private String topicName2;
+  private String topicName3;
+  private String topicName4;
+  private int currentTopic;
   private String messageType;
+  public Boolean started= false;
+  public Subscriber<T> subscriber;
+  public Subscriber<T> subscriber2;
   private MessageCallable<Bitmap, T> callable;
 
   public RosImageView(Context context) {
@@ -55,8 +63,16 @@ public class RosImageView<T> extends android.support.v7.widget.AppCompatImageVie
     super(context, attrs, defStyle);
   }
 
-  public void setTopicName(String topicName) {
+  public void setTopicName(String topicName,String topicName2) {
     this.topicName = topicName;
+    this.topicName2= topicName2;
+    //Extra
+    this.topicName3= topicName2;
+    this.topicName4= topicName2;
+  }
+
+  public void setCurrent(int topic){
+    this.currentTopic= topic;
   }
 
   public void setMessageType(String messageType) {
@@ -66,6 +82,18 @@ public class RosImageView<T> extends android.support.v7.widget.AppCompatImageVie
   public void setMessageToBitmapCallable(BitmapFromCompressedImage callable) {
     this.callable = (MessageCallable<Bitmap, T>) callable;
   }
+  public void setCamera(){
+    /*
+    if(started){
+    switch (currentTopic){
+      case 0:
+        setImageBitmap(callable.call(message1));
+        break;
+      case 1:
+        setImageBitmap(callable.call(message2));
+        break;
+    }}*/
+  }
 
   @Override
   public GraphName getDefaultNodeName() {
@@ -74,19 +102,38 @@ public class RosImageView<T> extends android.support.v7.widget.AppCompatImageVie
 
   @Override
   public void onStart(ConnectedNode connectedNode) {
-    Subscriber<T> subscriber = connectedNode.newSubscriber(topicName, messageType);
-    subscriber.addMessageListener(new MessageListener<T>() {
-      @Override
-      public void onNewMessage(final T message) {
-        post(new Runnable() {
-          @Override
-          public void run() {
-            setImageBitmap(callable.call(message));
-          }
-        });
-        postInvalidate();
-      }
-    });
+    started= true;
+    subscriber = connectedNode.newSubscriber(topicName, messageType);
+    subscriber2 = connectedNode.newSubscriber(topicName2, messageType);
+    //Switch de camaras
+      subscriber.addMessageListener(new MessageListener<T>() {
+        @Override
+        public void onNewMessage(final T message) {
+          post(new Runnable() {
+            @Override
+            public void run() {
+              if(currentTopic==0){
+              setImageBitmap(callable.call(message));}
+            }
+          });
+          postInvalidate();
+        }
+      });
+      subscriber2.addMessageListener(new MessageListener<T>() {
+        @Override
+        public void onNewMessage(final T message) {
+          post(new Runnable() {
+            @Override
+            public void run() {
+              if (currentTopic==1){
+              setImageBitmap(callable.call(message));}
+            }
+          });
+          postInvalidate();
+        }
+      });
+      //More cases
+
   }
 
   @Override

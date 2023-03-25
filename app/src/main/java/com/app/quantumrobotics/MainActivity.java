@@ -32,9 +32,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.Toast;
 
 import org.ros.address.InetAddressFactory;
 
@@ -49,7 +54,7 @@ import io.github.controlwear.virtual.joystick.android.JoystickView;
 import sensor_msgs.CompressedImage;
 import sensor_msgs.Image;
 
-public class MainActivity extends RosActivity implements View.OnClickListener {
+public class MainActivity extends RosActivity implements View.OnClickListener,AdapterView.OnItemSelectedListener {
     private static final String TAG = MainActivity.class.getSimpleName();
     private RosImageView<Image> rosImageView;
     public LocationPublisherNode locationPublisherNode = new LocationPublisherNode();
@@ -59,6 +64,8 @@ public class MainActivity extends RosActivity implements View.OnClickListener {
     public float rightval;
     public Boolean armMode= FALSE;
     public LinearLayout armbuttons;
+    //public String cam_topic="/usb_cam/image_raw/compressed";
+    public String cam_topic="/usb_cam/image_raw/compressed";
 
 
     private EditText locationFrameIdView, imuFrameIdView;
@@ -72,7 +79,9 @@ public class MainActivity extends RosActivity implements View.OnClickListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if(!armMode){
             locationPublisherNode.setTopic("/cmd_vel","twist");
         }else{
@@ -150,10 +159,20 @@ public class MainActivity extends RosActivity implements View.OnClickListener {
 
             }
         });
+
+        //Camera
         rosImageView = findViewById(R.id.cam);
-        rosImageView.setTopicName("/usb_cam/image_raw/compressed");
+        rosImageView.setTopicName("/zed2/zed_node/left_raw/image_raw_color/compressed","/usb_cam_1/image_raw/compressed");
+        //rosImageView.setTopicName("/usb_cam/image_raw/compressed","/usb_cam/image_raw/compressed");
         rosImageView.setMessageType(CompressedImage._TYPE);
         rosImageView.setMessageToBitmapCallable(new BitmapFromCompressedImage());
+
+        //Camera Selector
+        Spinner spinner= findViewById(R.id.cam_selec);
+        ArrayAdapter<CharSequence> adapter= ArrayAdapter.createFromResource(this,R.array.cams, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(this);
     }
 
     @Override
@@ -255,6 +274,16 @@ public class MainActivity extends RosActivity implements View.OnClickListener {
         }
         //nodeMainExecutor.execute(imuPublisherNode, nodeConfiguration);
         nodeMainExecutor.execute(rosImageView, nodeConfiguration.setNodeName("Cam_listener"));
+
+        /*
+        switch(cam_topic){
+            case cam1:
+                nodeMainExecutor.execute(rosImageView, nodeConfiguration.setNodeName("Cam_listener"));
+                break;
+            case cam2:
+                nodeMainExecutor.execute(rosImageView2,nodeConfiguration.setNodeName("Cam_listener"));
+                break;
+        }*/
         onClick(null);
     }
 
@@ -323,5 +352,20 @@ public class MainActivity extends RosActivity implements View.OnClickListener {
     public void box(View view) {
         locationPublisherNode.setArmMode(4);
         locationPublisherNode.setJointVars(0,0,true);
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
+        String text= adapterView.getItemAtPosition(position).toString();
+        Toast.makeText(adapterView.getContext(),text,Toast.LENGTH_SHORT).show();
+        cam_topic= text;
+        rosImageView.setCurrent(position);
+        rosImageView.setCamera();
+
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> adapterView) {
+
     }
 }

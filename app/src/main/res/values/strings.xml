@@ -11,5 +11,8 @@
     <string name="label_imu_frame_id">IMU Frame ID</string>
     <string name="default_location_hint">Default location frame ID</string>
     <string name="default_imu_hint">Default IMU frame ID</string>
-
+    <string-array name="cams">
+        <item>cam1</item>
+        <item>cam2</item>
+    </string-array>
 </resources>
