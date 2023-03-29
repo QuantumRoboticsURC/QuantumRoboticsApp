@@ -64,6 +64,8 @@ public class MainActivity extends RosActivity implements View.OnClickListener,Ad
     public float rightval;
     public Boolean armMode= FALSE;
     public LinearLayout armbuttons;
+    public Button RotIzqB;
+    public Button RotDerB;
     //public String cam_topic="/usb_cam/image_raw/compressed";
     public String cam_topic="/usb_cam/image_raw/compressed";
 
@@ -121,6 +123,8 @@ public class MainActivity extends RosActivity implements View.OnClickListener,Ad
         applyB.setOnClickListener(this);
 
         armbuttons= (LinearLayout) findViewById(R.id.armButtons);
+        RotDerB= findViewById(R.id.RotDer);
+        RotIzqB= findViewById(R.id.RotIzq);
         //Joysticks
         JoystickView joystick = (JoystickView) findViewById(R.id.jV);
         joystick.setOnMoveListener(new JoystickView.OnMoveListener() {
@@ -326,12 +330,22 @@ public class MainActivity extends RosActivity implements View.OnClickListener,Ad
             locationPublisherNode.setTopic("/cmd_vel","twist");
             Log.w(TAG,"Nav");
             armbuttons.setVisibility(View.INVISIBLE);
+            RotIzqB.setVisibility(View.INVISIBLE);
+            RotDerB.setVisibility(View.INVISIBLE);
         }else{
             Log.w(TAG,"arm");
             locationPublisherNode.setTopic("arm_teleop/joint1","float64");
             armbuttons.setVisibility(View.VISIBLE);
+            RotIzqB.setVisibility(View.VISIBLE);
+            RotDerB.setVisibility(View.VISIBLE);
         }
 
+    }
+
+    public void RotateRight(View view){ locationPublisherNode.rotate(true);
+    }
+    public void RotateLeft(View view){
+        locationPublisherNode.rotate(false);
     }
 
     public void intermediate(View view) {

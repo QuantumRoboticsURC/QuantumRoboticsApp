@@ -36,10 +36,27 @@ public class LocationPublisherNode extends AbstractNodeMain {
 
     private double linearVelocity;
     private double angularVelocity;
-    private double q1= -5;
-    private double q2= 135;
-    private double q3= -90;
-    private double q4= -45;
+    private double x= 0.14;
+    private double rot= 0;
+    private double z= 0.75;
+    private double phi= 0;
+
+    public double q1= 0;
+    public double q2= 135;
+    public double q3= -90;
+    public double q4= -45;
+
+    private double l1 = 0;
+    private double l2 = 2.6;
+    private double l3 = 2.6;
+    private double l4 = .9;
+
+    private double[] limits_map_q1= {-95,90};
+    private double[] limits_map_q2= {0,161};
+    private double[] limits_map_q3= {-165.4,0};
+    private double[] limits_map_q4= {-135,90};
+
+
 
     private String nombre_topico;
     private String tipo_topico;
@@ -94,11 +111,27 @@ public class LocationPublisherNode extends AbstractNodeMain {
 
         moving= onMove;
     }
-    public void setJointVars(float joint1,float joint4, boolean onMove){
-        q1+= joint1*5;
-        q4+= joint4*5;
+    public void rotate(boolean right){
+        if (right) {rot+=5;q1+=5;}
+        if(!right){rot-=5;q1-=5;}
+        double[] result=inverseKinematics(x,rot,z,phi);
+        q1=result[0];
+        q2=result[1];
+        q3=result[2];
+        q4=result[3];
+        moving= true;
+    }
+    public void setJointVars(float val_l,float val_r, boolean onMove){
+        x+= val_l * 0.2;
+        z+= val_r * 0.2;
+        double[] result=inverseKinematics(x,rot,z,phi);
+        q1=result[0];
+        q2=result[1];
+        q3=result[2];
+        q4=result[3];
+        /*Restricciones que están en inverseKinem
         if(q1 > 90 || q1 < -90){q1-=joint1*5;}
-        if (q4 > 90 || q4 < -90){q4-=joint4*5;}
+        if (q4 > 90 || q4 < -90){q4-=joint4*5;}*/
         moving= onMove;
 
     }
@@ -110,39 +143,152 @@ public class LocationPublisherNode extends AbstractNodeMain {
         switch (mode){
             case 1:
                 //Intermediate
-                q1= -5;
+                q1= 0;
                 q2= 135;
                 q3= -90;
                 q4= -45;
                 break;
             case 2:
                 //Storage
-                q1= -5;
+                q1= 0;
                 q2= 161;
                 q3= -163.15;
                 q4= 90;
                 break;
             case 3:
                 //Floor
-                q1= -5;
+                q1= 0;
                 q2= 49.13;
                 q3= -101.74;
                 q4= 52.62;
                 break;
             case 4:
                 //Box
-                q1= -94;
-                q2= 134.95;
-                q3= -89.91;
-                q4= -45.05;
+                q1= 0;
+                q2= 49.13;
+                q3= -101.74;
+                q4= 52.62;
                 break;
             default:
                 //HOME
-                q1= -5;
-                q2= 135;
-                q3= -90;
-                q4= -45;
+                q1= 0;
+                q2= 161;
+                q3= -163.15;
+                q4= 2.15;
         }
+    }
+
+    public double qlimit(double[] l,double val){
+        if(val < l[0]){ //inferior
+            return l[0];
+        }else if(val > l[1]){ //superior
+            return l[1];
+        }else{
+            return val;
+        }
+
+    }
+    public double[] inverseKinematics(double xm, double ym, double zm, double phi_int){
+        //temp
+        double values_map_joint1;
+        double values_map_joint3;
+        double values_map_joint4;
+        double Q1 = 0;
+    /*if (xm != 0 || ym != 0 || zm != 0){
+      if(xm == 0){
+        if(ym>0){
+          xm = ym;
+          Q1 = math.pi/2;
+        }else if (ym<0){
+          xm = ym;
+          Q1 = math.pi/2;
+        }else if(ym == 0){
+          Q1 = 0;
+        }
+      }else if (xm < 0){
+        if (ym == 0){
+          Q1 = 0;
+        }else if(ym < 0){
+          //No lo he cambiado #real
+          Q1 = math.re(math.atan2(xm, ym));
+        }else{
+          //Tampoco lo he cambiado #real
+          Q1 = math.re(math.atan2(-xm,-ym));
+        }
+
+      }else{
+        //Ni idea #real
+        Q1 = math.re(math.atan2(ym,xm));
+      }
+    }    */
+        Q1 = Math.atan2(ym,xm);
+        System.out.println(Q1);
+        //console.log("Q1",Q1)
+        //Para q1
+        Log.d(TAG, String.valueOf(q1)); //marca -5 en lugar de 0
+
+        q1=qlimit(limits_map_q1,q1);
+        //Para q2
+        double hip=Math.sqrt(Math.pow(xm,2)+Math.pow((zm-l1),2));
+        //console.log("zm",zm)
+        //console.log("l1",l1)
+        //console.log("xm",xm)
+        //console.log("hip", hip)
+        double phi = Math.atan2(zm-l1, xm);
+        //console.log("phi",phi)
+
+        //beta=acos((-l3^2+l2^2+hip^2)/(2*l2*hip))
+        double beta=Math.acos((Math.pow(l2,2)+Math.pow(hip,2)-Math.pow(l3,2))/(2*l2*hip)); //da negativo cuando no funciona
+        double Q2=phi+beta;//math.re(phi+beta);
+        q2=Math.toDegrees(Q2);
+        //console.log("beta",beta)
+        //console.log("Q2",Q2)
+        Log.d(TAG, String.valueOf(q2));
+        q2=qlimit(limits_map_q2,q2);
+        //Para q3
+        double gamma=Math.acos((Math.pow(l2,2)+Math.pow(l3,2)-Math.pow(hip,2))/(2*l2*l3));
+        double Q3=gamma-Math.PI;
+        q3=Math.toDegrees(Q3);
+        q3=qlimit(limits_map_q3,q3);
+        //console.log("gamma",gamma)
+        //  console.log("Q3",Q3)
+        Log.d(TAG, String.valueOf(q3));
+
+        q4 = phi_int - q2 -q3;
+        q4=qlimit(limits_map_q4,q4);
+        values_map_joint4 = q4+q2+q3;
+
+        Log.d(TAG, String.valueOf(q4));
+
+
+        double acum = Math.toRadians(q2);
+        double x2 = l2*Math.cos(acum);
+        double y2 = l2*Math.sin(acum);
+        acum+=Math.toRadians(q3);
+        double x3 = x2+l3*Math.cos(acum);
+        double y3 = y2+l3*Math.sin(acum);
+        acum+=Math.toRadians(q4);
+        double x4 = x3+l4*Math.cos(acum);
+        double y4 = y3+l4*Math.sin(acum);
+        //console.log(y4); //NAN
+        double[] res={q1,q2,q3,q4};
+
+
+        if(y4> -4.2 && (x4> 1.1 || y4>=0)){
+            values_map_joint1 = x3;
+            values_map_joint3 = y3;
+        }
+            /* Bool return
+            /*
+            angles_map_q2=q2;
+            angles_map_q3=q3;
+            angles_map_q4=q4;
+            arm_interface(angles_map.q2,angles_map.q3,angles_map.q4);
+            return true;
+        }else{
+            return false;
+        }*/
+        return res;
     }
     @Override
     public void onStart(final ConnectedNode connectedNode) {

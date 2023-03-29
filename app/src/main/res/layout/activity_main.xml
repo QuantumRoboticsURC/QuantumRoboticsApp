@@ -115,6 +115,15 @@
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
+        <Button
+            android:id="@+id/RotIzq"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/jV"
+            app:layout_constraintTop_toTopOf="parent"
+            android:onClick="RotateLeft"
+            android:visibility="gone" />
         <io.github.controlwear.virtual.joystick.android.JoystickView
             android:id="@+id/jV"
             android:layout_width="120dp"
@@ -125,7 +134,7 @@
             app:JV_backgroundColor="#BB888888"
             app:JV_borderWidth="4dp"
             app:JV_fixedCenter="false"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toEndOf="@id/RotIzq"
             app:layout_constraintBottom_toBottomOf="parent"/>
         <LinearLayout
             android:id="@+id/armButtons"
@@ -176,7 +185,8 @@
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            app:layout_constraintEnd_toStartOf="@id/RotDer">
 
             <io.github.controlwear.virtual.joystick.android.JoystickView
                 android:id="@+id/jV2"
@@ -187,9 +197,7 @@
                 app:JV_borderColor="#BB888888"
                 app:JV_backgroundColor="#BB888888"
                 app:JV_borderWidth="4dp"
-                app:JV_fixedCenter="false"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"/>
+                app:JV_fixedCenter="false"/>
 
                                    <!--Otro pad-->
             <!--<LinearLayout
@@ -241,6 +249,16 @@
                     android:layout_marginLeft="42dp" />
             </LinearLayout>-->
         </LinearLayout>
+
+        <Button
+            android:id="@+id/RotDer"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:onClick="RotateRight"
+            android:visibility="gone"/>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
