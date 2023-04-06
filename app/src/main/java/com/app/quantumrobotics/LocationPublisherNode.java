@@ -29,8 +29,10 @@ public class LocationPublisherNode extends AbstractNodeMain {
     private long previousPublishTime = System.currentTimeMillis();
     private boolean isMessagePending;
 
-    private String topic_name;
-    private String topic_type;
+    private double q1_m;
+    private double q2_m;
+    private double q3_m;
+    private double q4_m;
 
     private Boolean moving= false;
 
@@ -71,6 +73,8 @@ public class LocationPublisherNode extends AbstractNodeMain {
     private Publisher<Message> finalLocationPublisher2;
     private Publisher<Message> finalLocationPublisher3;
     private Publisher<Message> finalLocationPublisher4;
+    private String topic_name;
+
     public LocationPublisherNode() {
         isMessagePending = false;
         locationListener = new LocationListener() {
@@ -119,11 +123,23 @@ public class LocationPublisherNode extends AbstractNodeMain {
         q2=result[1];
         q3=result[2];
         q4=result[3];
+
+        moving= true;
+    }
+    public void rotatePhi(boolean up){
+        if(up){phi+=5;q4+=5;}
+        if(!up){phi-=5;q4-=5;}
+        double[] result=inverseKinematics(x,rot,z,phi);
+        q1=result[0];
+        q2=result[1];
+        q3=result[2];
+        q4=result[3];
+
         moving= true;
     }
     public void setJointVars(float val_l,float val_r, boolean onMove){
-        x+= val_l * 0.2;
-        z+= val_r * 0.2;
+        x+= val_l * 0.1;
+        z+= val_r * 0.1;
         double[] result=inverseKinematics(x,rot,z,phi);
         q1=result[0];
         q2=result[1];
@@ -143,38 +159,38 @@ public class LocationPublisherNode extends AbstractNodeMain {
         switch (mode){
             case 1:
                 //Intermediate
-                q1= 0;
-                q2= 135;
-                q3= -90;
-                q4= -45;
+                x= 0;
+                rot= 0;
+                z= 3.677;
+                phi= 0;
                 break;
             case 2:
                 //Storage
-                q1= 0;
-                q2= 161;
-                q3= -163.15;
-                q4= 90;
+                x= 0.134;
+                rot= 0;
+                z= 0.75;
+                phi= 90;
                 break;
             case 3:
                 //Floor
-                q1= 0;
-                q2= 49.13;
-                q3= -101.74;
-                q4= 52.62;
+                x= 3.28;
+                rot= 0;
+                z= -0.1;
+                phi= 0;
                 break;
             case 4:
-                //Box
-                q1= 0;
-                q2= 49.13;
-                q3= -101.74;
-                q4= 52.62;
+                //Write
+                x= 3.33;
+                rot= 0;
+                z= 1.35;
+                phi= 0;
                 break;
             default:
                 //HOME
-                q1= 0;
-                q2= 161;
-                q3= -163.15;
-                q4= 2.15;
+                x= 0.134;
+                rot= 0;
+                z= 0.75;
+                phi= 0;
         }
     }
 
@@ -273,7 +289,6 @@ public class LocationPublisherNode extends AbstractNodeMain {
         //console.log(y4); //NAN
         double[] res={q1,q2,q3,q4};
 
-
         if(y4> -4.2 && (x4> 1.1 || y4>=0)){
             values_map_joint1 = x3;
             values_map_joint3 = y3;
@@ -288,6 +303,7 @@ public class LocationPublisherNode extends AbstractNodeMain {
         }else{
             return false;
         }*/
+
         return res;
     }
     @Override
@@ -364,10 +380,24 @@ public class LocationPublisherNode extends AbstractNodeMain {
                         final std_msgs.Float64 message2= (Float64) finalLocationPublisher2.newMessage();
                         final std_msgs.Float64 message3= (Float64) finalLocationPublisher3.newMessage();
                         final std_msgs.Float64 message4= (Float64) finalLocationPublisher4.newMessage();
-                        message1.setData(q1);
-                        message2.setData(q2);
-                        message3.setData(q3);
-                        message4.setData(q4);
+
+                        if(!(Double.isNaN(q1)|Double.isNaN(q2)|Double.isNaN(q3)|Double.isNaN(q4))){
+                            message1.setData(q1);
+                            message2.setData(q2);
+                            message3.setData(q3);
+                            message4.setData(q4);
+
+                            q1_m=q1;
+                            q2_m=q2;
+                            q3_m=q3;
+                            q4_m=q4;
+                        }else{
+                            message1.setData(q1_m);
+                            message2.setData(q2_m);
+                            message3.setData(q3_m);
+                            message4.setData(q4_m);
+                        }
+
                         Log.d(TAG, nombre_topico);
                         if(moving){
                             finalLocationPublisher1.publish(message1);

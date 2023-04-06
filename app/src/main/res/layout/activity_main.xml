@@ -14,7 +14,8 @@
         android:text="@string/default_location_frame_id"
         android:hint="@string/default_location_hint"
         android:inputType="text"
-        tools:ignore="MissingConstraints" />
+        tools:ignore="MissingConstraints"
+        android:visibility="gone"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -33,7 +34,8 @@
         android:layout_gravity="center_horizontal"
         android:hint="@string/default_imu_hint"
         android:inputType="text"
-        tools:ignore="MissingConstraints" />
+        tools:ignore="MissingConstraints"
+        android:visibility="gone"/>
     <!--
     <VideoView
         android:id="@+id/video"
@@ -110,7 +112,44 @@
             android:onClick="changeMode"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+    <Button
+        android:id="@+id/phi_lr"
+        android:layout_width="50dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@id/joysticks"
+        app:layout_constraintEnd_toStartOf="@+id/phi"
+        app:layout_constraintTop_toBottomOf="@id/constraintLayout"
+        android:visibility="gone"/>
+    <LinearLayout
+        android:id="@+id/phi"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@id/joysticks"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="50dp"
+        app:layout_constraintTop_toBottomOf="@id/constraintLayout"
+        android:layout_marginRight="70dp"
+        android:visibility="gone">
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:onClick="PhiUp" />
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:onClick="PhiDown"/>
+    </LinearLayout>
+    <Button
+        android:id="@+id/phi_rr"
+        android:layout_width="50dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@id/joysticks"
+        app:layout_constraintStart_toEndOf="@+id/phi"
+        app:layout_constraintTop_toBottomOf="@id/constraintLayout"
+        android:visibility="gone"/>
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/joysticks"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
@@ -171,12 +210,12 @@
             android:textColor="#BBFFFFFF"
             android:onClick="floor"/>
         <Button
-            android:id="@+id/box"
+            android:id="@+id/write"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Box"
+            android:text="Write"
             android:textColor="#BBFFFFFF"
-            android:onClick="box"/>
+            android:onClick="write"/>
         </LinearLayout>
 
         <LinearLayout

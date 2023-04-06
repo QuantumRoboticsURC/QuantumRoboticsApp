@@ -66,6 +66,9 @@ public class MainActivity extends RosActivity implements View.OnClickListener,Ad
     public LinearLayout armbuttons;
     public Button RotIzqB;
     public Button RotDerB;
+    public Button RotPhiL;
+    public Button RotPhiR;
+    public LinearLayout PhiButtons;
     //public String cam_topic="/usb_cam/image_raw/compressed";
     public String cam_topic="/usb_cam/image_raw/compressed";
 
@@ -125,6 +128,10 @@ public class MainActivity extends RosActivity implements View.OnClickListener,Ad
         armbuttons= (LinearLayout) findViewById(R.id.armButtons);
         RotDerB= findViewById(R.id.RotDer);
         RotIzqB= findViewById(R.id.RotIzq);
+        RotPhiL= findViewById(R.id.phi_lr);
+        RotPhiR= findViewById(R.id.phi_rr);
+        PhiButtons= findViewById(R.id.phi);
+
         //Joysticks
         JoystickView joystick = (JoystickView) findViewById(R.id.jV);
         joystick.setOnMoveListener(new JoystickView.OnMoveListener() {
@@ -332,16 +339,27 @@ public class MainActivity extends RosActivity implements View.OnClickListener,Ad
             armbuttons.setVisibility(View.INVISIBLE);
             RotIzqB.setVisibility(View.INVISIBLE);
             RotDerB.setVisibility(View.INVISIBLE);
+            PhiButtons.setVisibility(View.INVISIBLE);
+            RotPhiL.setVisibility(View.INVISIBLE);
+            RotPhiR.setVisibility(View.INVISIBLE);
+
         }else{
             Log.w(TAG,"arm");
             locationPublisherNode.setTopic("arm_teleop/joint1","float64");
             armbuttons.setVisibility(View.VISIBLE);
             RotIzqB.setVisibility(View.VISIBLE);
             RotDerB.setVisibility(View.VISIBLE);
+            PhiButtons.setVisibility(View.VISIBLE);
+            RotPhiL.setVisibility(View.VISIBLE);
+            RotPhiR.setVisibility(View.VISIBLE);
         }
 
     }
 
+    public void PhiUp(View view){ locationPublisherNode.rotatePhi(true);
+    }
+    public void PhiDown(View view){ locationPublisherNode.rotatePhi(false);
+    }
     public void RotateRight(View view){ locationPublisherNode.rotate(true);
     }
     public void RotateLeft(View view){
@@ -363,7 +381,7 @@ public class MainActivity extends RosActivity implements View.OnClickListener,Ad
         locationPublisherNode.setJointVars(0,0,true);
     }
 
-    public void box(View view) {
+    public void write(View view) {
         locationPublisherNode.setArmMode(4);
         locationPublisherNode.setJointVars(0,0,true);
     }
